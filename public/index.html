@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Auswertung</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: Kopfzeile mit Filterleiste, dann KPI-Reihe, dann Chart-Raster (2 Spalten, bricht auf 1), Tabelle und Methodik am Ende. */
+:root{
+  --bg:#f0f0ef; --surface:#ffffff; --ink:#1d1d1b; --ink-2:#4f4f4d; --muted:#858583;
+  --grid:#e4e4e2; --axis:#c9c9c6; --border:rgba(29,29,27,.12);
+  --accent:#e40045; --accent-ink:#ffffff; --accent-soft:rgba(228,0,69,.10);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300;
+  --heat-0:#f0f0ef; --heat-1:#f9c6d4; --heat-2:#f28da8; --heat-3:#ec4f7c; --heat-4:#e40045; --heat-5:#9e0030;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121212; --surface:#1d1d1b; --ink:#f4f4f2; --ink-2:#c6c6c2; --muted:#858583;
+  --grid:#2b2b29; --axis:#3b3b38; --border:rgba(255,255,255,.10);
+  --accent:#ff2a6a; --accent-ink:#ffffff; --accent-soft:rgba(255,42,106,.16);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300;
+  --heat-0:#1d1d1b; --heat-1:#4a1526; --heat-2:#7d1638; --heat-3:#b31a4d; --heat-4:#ff2a6a; --heat-5:#ff7fa5;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#121212; --surface:#1d1d1b; --ink:#f4f4f2; --ink-2:#c6c6c2; --muted:#858583;
+  --grid:#2b2b29; --axis:#3b3b38; --border:rgba(255,255,255,.10);
+  --accent:#ff2a6a; --accent-ink:#ffffff; --accent-soft:rgba(255,42,106,.16);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300;
+  --heat-0:#1d1d1b; --heat-1:#4a1526; --heat-2:#7d1638; --heat-3:#b31a4d; --heat-4:#ff2a6a; --heat-5:#ff7fa5;
+  color-scheme:dark }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:20px;padding-block:28px 48px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+h1{font-size:clamp(34px,5vw,54px);font-weight:700;line-height:.95;letter-spacing:-.01em;text-transform:uppercase}
+h2{font-size:22px;font-weight:600;letter-spacing:.01em}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.sub{color:var(--ink-2);max-width:68ch;margin-top:10px}
+.brandbar{display:flex;justify-content:space-between;align-items:center;gap:20px;padding-bottom:22px;flex-wrap:wrap}
+.brandbar img{height:auto}
+.brandbar .man{height:64px}
+.brandbar .partners{display:flex;align-items:center;gap:14px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.brandbar .partners img{height:40px}
+.only-light,.only-dark{display:block}
+.only-dark{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .only-dark{display:block}:root:not([data-theme="light"]) .only-light{display:none}}
+:root[data-theme="dark"] .only-dark{display:block}:root[data-theme="dark"] .only-light{display:none}
+.credits{display:flex;align-items:center;gap:28px;flex-wrap:wrap;margin-top:28px;padding-top:20px;border-top:1px solid var(--grid)}
+.credits .c{display:flex;flex-direction:column;gap:8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.credits img{height:36px;width:auto}
+.credits .wordmark{font-family:var(--display);font-size:22px;font-weight:600;color:var(--ink);letter-spacing:.02em;text-transform:none}
+header{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end;padding-bottom:22px;border-bottom:3px solid var(--ink)}
+header>*{min-width:0}
+h1{overflow-wrap:anywhere}
+header .meta{font-family:var(--display);font-size:15px;color:var(--ink-2);text-align:right;line-height:1.3;text-transform:uppercase;letter-spacing:.04em}
+header .meta b{color:var(--ink);font-size:20px;display:block}
+@media (max-width:720px){header{grid-template-columns:1fr}header .meta{text-align:left}}
+
+.filterbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--grid);margin-bottom:22px}
+.filterbar .lbl{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.chip{appearance:none;border:1px solid var(--border);background:var(--surface);color:var(--ink);font:inherit;font-size:13px;padding:6px 11px;border-radius:999px;cursor:pointer;line-height:1.1;display:inline-flex;gap:6px;align-items:center}
+.chip small{color:var(--muted);font-size:11px}
+.chip:hover{border-color:var(--ink-2)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip[aria-pressed="true"] small{color:inherit;opacity:.7}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:22px}
+.kpi{background:var(--surface);border:1px solid var(--border);padding:16px 18px 14px;min-width:0}
+.kpi .k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-family:var(--display);font-size:44px;font-weight:700;line-height:1;margin-top:8px;letter-spacing:-.01em}
+.kpi .v small{font-size:20px;font-weight:600;color:var(--ink-2);margin-left:2px}
+.kpi .d{font-size:13px;color:var(--ink-2);margin-top:6px}
+
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grid .full{grid-column:1 / -1}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);padding:18px 20px 16px;min-width:0}
+.card .head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
+.card .note{font-size:13px;color:var(--ink-2);margin:0 0 10px;max-width:72ch}
+.card svg{display:block;width:100%;height:auto;overflow:visible}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--ink-2);margin-top:8px}
+.legend span i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+text{font-family:var(--body);fill:var(--ink-2);font-size:12px}
+text.val{fill:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+text.tick{fill:var(--muted);font-variant-numeric:tabular-nums}
+.gl{stroke:var(--grid);stroke-width:1}
+.ax{stroke:var(--axis);stroke-width:1}
+.bar{fill:var(--accent)}
+.bar.dim{fill:var(--axis)}
+.hit{fill:transparent;cursor:default}
+.hit:hover + .bar, .row:hover .bar{filter:brightness(.88)}
+
+.tt{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:13px;padding:8px 10px;border-radius:4px;z-index:20;max-width:260px;line-height:1.35;opacity:0;transition:opacity .08s}
+.tt b{display:block;font-weight:600}
+
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--accent-soft)}
+tbody tr.on td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.tbl{overflow-x:auto}
+.mini{display:inline-block;height:8px;background:var(--accent);vertical-align:middle;margin-right:8px;border-radius:0 2px 2px 0}
+
+.method{margin-top:26px;padding-top:18px;border-top:1px solid var(--grid);color:var(--ink-2);font-size:14px;max-width:80ch}
+.method h3{font-size:16px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.method dl{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;margin:10px 0 0}
+.method dt{font-variant-numeric:tabular-nums;text-align:right;color:var(--ink);font-weight:600}
+.method dd{margin:0}
+footer{margin-top:28px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.gate{position:fixed;inset:0;background:#121212;color:#f4f4f2;display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.gate form{width:min(360px,100%);display:flex;flex-direction:column;gap:12px}
+.gate label{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#858583}
+.gate input{font:inherit;font-size:18px;padding:12px 14px;border:1px solid #3b3b38;border-radius:4px;background:#1d1d1b;color:#f4f4f2;letter-spacing:.1em}
+.gate input:focus{outline:2px solid #ff2a6a;outline-offset:1px}
+.gate button{font:inherit;font-weight:600;padding:12px;border:0;border-radius:4px;background:#e40045;color:#fff;cursor:pointer}
+.gate .err{font-size:13px;color:#ff7fa5;min-height:18px}
+.gate .ver{font-size:11px;color:#4f4f4d;margin-top:20px}
+.wrap[hidden]{display:none}
+</style>
+</head>
+<body>
+<div class="gate" id="gate"><form id="gateForm" autocomplete="off"><label for="code">Zugangscode</label><input id="code" name="code" type="password" autocapitalize="off" spellcheck="false" autofocus><button type="submit">Öffnen</button><div class="err" id="gateErr"></div><div class="ver">v1.2</div></form></div>
+
+
+<div class="wrap" id="app" hidden>
+<div class="brandbar">
+  <div><img class="man only-light" id="logo-man-d" alt="MAN"><img class="man only-dark" id="logo-man-l" alt="MAN"></div>
+  <div class="partners"><img class="only-light" id="logo-sh-d" alt="Schmidhuber"><img class="only-dark" id="logo-sh-l" alt="Schmidhuber"></div>
+</div>
+<header>
+  <div>
+    <div class="eyebrow" id="m-eyebrow"></div>
+    <h1 style="margin-top:8px" id="m-title"></h1>
+    <p class="sub">Was Besucherinnen und Besucher an den zwölf Touchscreen-Stelen am Stand angesehen haben: Sessions, Verweildauer, Inhalte, Videos. Auswahl einer Stele filtert alle Kennzahlen und Diagramme.</p>
+  </div>
+  <div class="meta"><b id="m-range">14.–20. Sept. 2026</b>12 Stelen · 12 Fahrzeuge<br><span id="m-sessions"></span></div>
+</header>
+
+<div class="filterbar" id="filters" role="group" aria-label="Stele wählen">
+  <span class="lbl">Stele</span>
+</div>
+
+<section class="kpis" id="kpis"></section>
+
+<div class="grid">
+  <div class="card full">
+    <div class="head"><h2>Besucheraufkommen nach Messetag und Uhrzeit</h2><span class="note" style="margin:0">Sessions pro Stunde</span></div>
+    <p class="note">Jede Zelle ist eine Stunde. Je dunkler, desto mehr Sessions wurden in dieser Stunde gestartet. Montag, 14.09., war der Tag vor der Eröffnung.</p>
+    <div id="heat"></div>
+  </div>
+
+  <div class="card">
+    <div class="head"><h2>Sessions pro Messetag</h2></div>
+    <p class="note">Eine Session beginnt mit der ersten Berührung und endet nach 60 Sekunden ohne Interaktion.</p>
+    <div id="days"></div>
+  </div>
+
+  <div class="card">
+    <div class="head"><h2>Sessions pro Stele</h2></div>
+    <p class="note">Alle zwölf Stelen im Vergleich. Die ausgewählte Stele ist hervorgehoben.</p>
+    <div id="stelen"></div>
+  </div>
+
+  <div class="card">
+    <div class="head"><h2>Welche Inhalte wurden genutzt?</h2></div>
+    <p class="note">Anteil der Sessions, in denen ein Bereich mindestens einmal geöffnet wurde. Mehrfachnennungen möglich.</p>
+    <div id="sections"></div>
+  </div>
+
+  <div class="card">
+    <div class="head"><h2>Wie lange wurde interagiert?</h2></div>
+    <p class="note">Interaktionsdauer von der ersten bis zur letzten Berührung. Sessions mit nur einer Berührung zählen als unter 15 Sekunden.</p>
+    <div id="dur"></div>
+  </div>
+
+  <div class="card">
+    <div class="head"><h2>Berührungen nach Bereich</h2></div>
+    <p class="note">Summe aller Tipps auf Navigation und Inhalte, aufgeschlüsselt nach Bereich.</p>
+    <div id="taps"></div>
+  </div>
+
+  <div class="card">
+    <div class="head"><h2>Gestartete Videos</h2></div>
+    <p class="note" id="vid-note">Video-Starts je Film über den gesamten Zeitraum.</p>
+    <div id="videos"></div>
+  </div>
+
+  <div class="card full">
+    <div class="head"><h2>Alle Stelen im Überblick</h2><span class="note" style="margin:0">Zeile anklicken, um zu filtern</span></div>
+    <div class="tbl"><table id="tbl">
+      <thead><tr><th>Stele</th><th>Fahrzeug</th><th>Sessions</th><th>Ø Dauer</th><th>Median Dauer</th><th>Berührungen</th><th>Ø Tipps / Session</th><th>Englisch</th><th>Video-Starts</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</div>
+
+<div class="method">
+  <h3>Datengrundlage und Bereinigung</h3>
+  <p>Grundlage sind die Nutzungsprotokolle der zwölf Stelen (Berührungen, Screenwechsel, Scrolltiefe, Videostarts, Session-Start und -Ende). Damit nur echte Besucherinteraktionen gezählt werden, wurden folgende Sessions ausgeschlossen:</p>
+  <dl id="rules"></dl>
+  <p style="margin-top:12px">Die Sprache einer Session gilt als Englisch, sobald mindestens ein englischer Screen geöffnet wurde. Verweildauern auf der Startseite sind nicht ausgewiesen, weil dort auch die Wartezeit ohne Besucher aufläuft.</p>
+</div>
+
+<div class="credits">
+  <div class="c"><img class="only-light" id="logo-man-d2" alt="MAN"><img class="only-dark" id="logo-man-l2" alt="MAN"></div>
+  <div class="c"><img class="only-light" id="logo-sh-d2" alt="Schmidhuber"><img class="only-dark" id="logo-sh-l2" alt="Schmidhuber"></div>
+</div>
+<footer><span id="m-footer"></span><span>Rohdaten: 12 Protokolldateien, 79.057 Ereignisse</span></footer>
+</div>
+<div class="tt" id="tt"></div>
+
+<script>
+let DATA=null;
+const $gate=document.getElementById('gate'),$app=document.getElementById('app'),$err=document.getElementById('gateErr'),$code=document.getElementById('code');
+async function unlock(code){
+  $err.textContent='';
+  let r;try{r=await fetch('/api/data',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code})})}catch{$err.textContent='Keine Verbindung.';return}
+  if(r.status===401){$err.textContent='Code nicht korrekt.';return}
+  if(!r.ok){$err.textContent='Daten konnten nicht geladen werden ('+r.status+').';return}
+  DATA=(await r.json()).data;
+  try{sessionStorage.setItem('bs-code',code)}catch{}
+  $gate.remove();$app.hidden=false;boot();
+}
+document.getElementById('gateForm').addEventListener('submit',e=>{e.preventDefault();unlock($code.value)});
+try{const c=sessionStorage.getItem('bs-code');if(c)unlock(c)}catch{}
+
+function boot(){
+const SECT_COLORS={'Startseite':'var(--s1)','Highlights':'var(--s2)','Technische Daten':'var(--s3)','Bundles':'var(--s4)','Highlights (Variante)':'var(--s5)','Individualisierung':'var(--s6)'};
+const KEYS=Object.keys(DATA.stelen);
+const DAYS=Object.keys(DATA.pro_tag);
+const HOURS=Object.keys(DATA.pro_stunde).map(Number);
+const WD=['So','Mo','Di','Mi','Do','Fr','Sa'];
+const fmt=n=>n.toLocaleString('de-DE');
+const pct=x=>(x*100).toLocaleString('de-DE',{maximumFractionDigits:0})+' %';
+const dur=s=>s>=60?`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')} min`:`${Math.round(s)} s`;
+const dayLabel=d=>{const dt=new Date(d+'T12:00:00');return WD[dt.getDay()]+' '+dt.getDate()+'.'+(dt.getMonth()+1)+'.';};
+let sel='all';
+const tt=document.getElementById('tt');
+function showTT(e,html){tt.innerHTML=html;tt.style.opacity=1;moveTT(e)}
+function moveTT(e){const x=Math.min(e.clientX+14,innerWidth-tt.offsetWidth-10);tt.style.left=x+'px';tt.style.top=(e.clientY+14)+'px'}
+function hideTT(){tt.style.opacity=0}
+function hover(el,html){el.addEventListener('pointerenter',e=>showTT(e,html));el.addEventListener('pointermove',moveTT);el.addEventListener('pointerleave',hideTT)}
+const svg=(w,h)=>{const s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('viewBox',`0 0 ${w} ${h}`);return s};
+const el=(n,a={})=>{const e=document.createElementNS('http://www.w3.org/2000/svg',n);for(const k in a)e.setAttribute(k,a[k]);return e};
+const txt=(x,y,t,cls='',extra={})=>{const e=el('text',{x,y,class:cls,...extra});e.textContent=t;return e};
+const nice=m=>{const p=Math.pow(10,Math.floor(Math.log10(m||1)));const f=m/p;const s=f<=1?1:f<=2?2:f<=5?5:10;return s*p};
+
+function cur(){return sel==='all'?DATA.gesamt:DATA.pro_stele[sel]}
+function label(k){const s=DATA.stelen[k];return s.id.replace('BS','Stele ')+' · '+s.modell}
+
+/* ---------- Filter ---------- */
+const fb=document.getElementById('filters');
+function mkChip(k,name,sub){const b=document.createElement('button');b.className='chip';b.dataset.k=k;b.innerHTML=name+(sub?`<small>${sub}</small>`:'');b.addEventListener('click',()=>{sel=k;render()});fb.appendChild(b)}
+mkChip('all','Alle Stelen','');
+KEYS.forEach(k=>mkChip(k,DATA.stelen[k].id.replace('BS',''),DATA.stelen[k].modell));
+
+/* ---------- KPIs ---------- */
+function renderKPIs(){
+  const d=cur();const g=DATA.gesamt;
+  const multi=d.sessions? (d.sessions-d.dauer_hist[0])/d.sessions:0;
+  const items=[
+    ['Sessions',fmt(d.sessions),sel==='all'?'an 12 Stelen, 7 Tage':pct(d.sessions/g.sessions)+' aller Sessions'],
+    ['Ø Interaktionsdauer',dur(d.dauer_mean_s),'Median '+dur(d.dauer_median_s)],
+    ['Berührungen',fmt(d.taps),(d.taps/d.sessions).toLocaleString('de-DE',{maximumFractionDigits:1})+' pro Session'],
+    ['Länger als 15 s',pct(multi),'der Sessions mit mehreren Berührungen'],
+    ['Englisch',pct(d.anteil_engl),'der Sessions mit englischem Screen'],
+    ['Video-Starts',fmt(d.videos),d.videos?('in '+fmt(d.video_sessions)+' Sessions'):'keine Videos auf dieser Stele'],
+  ];
+  document.getElementById('kpis').innerHTML=items.map(([k,v,dd])=>`<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div><div class="d">${dd}</div></div>`).join('');
+  document.getElementById('m-sessions').textContent=fmt(g.sessions)+' Sessions bereinigt';
+}
+
+/* ---------- Heatmap ---------- */
+function renderHeat(){
+  const src=sel==='all'?DATA.heat:DATA.heat_stele[sel];
+  const W=1000,L=70,T=26,cw=(W-L-10)/HOURS.length,ch=34,H=T+DAYS.length*ch+8;
+  const s=svg(W,H);let max=0;DAYS.forEach(d=>HOURS.forEach(h=>max=Math.max(max,src[d][h])));
+  HOURS.forEach((h,i)=>s.appendChild(txt(L+i*cw+cw/2,16,h+' Uhr','tick',{'text-anchor':'middle'})));
+  DAYS.forEach((d,r)=>{
+    s.appendChild(txt(L-10,T+r*ch+ch/2+4,dayLabel(d),'',{'text-anchor':'end'}));
+    HOURS.forEach((h,i)=>{
+      const v=src[d][h];const lvl=v===0?0:Math.min(5,1+Math.floor(4*v/(max+0.0001)));
+      const rc=el('rect',{x:L+i*cw+1,y:T+r*ch+1,width:cw-2,height:ch-2,rx:3,fill:`var(--heat-${lvl})`});
+      hover(rc,`<b>${dayLabel(d)}, ${h}–${h+1} Uhr</b>${fmt(v)} Sessions`);
+      s.appendChild(rc);
+      if(v>0&&v>=max*0.6)s.appendChild(txt(L+i*cw+cw/2,T+r*ch+ch/2+4,v,'val',{'text-anchor':'middle','fill':'var(--accent-ink)','pointer-events':'none'}));
+    });
+  });
+  const box=document.getElementById('heat');box.innerHTML='';box.appendChild(s);
+}
+
+/* ---------- Vertical bars (days / duration) ---------- */
+function vbars(box,labels,vals,ttFn,opts={}){
+  const W=560,H=240,L=44,B=34,T=14,R=8,n=vals.length,max=nice(Math.max(...vals)*1.05||1);
+  const s=svg(W,H);const pw=W-L-R,ph=H-T-B,bw=pw/n;
+  for(let i=0;i<=4;i++){const y=T+ph-ph*i/4;s.appendChild(el('line',{x1:L,x2:W-R,y1:y,y2:y,class:i?'gl':'ax'}));s.appendChild(txt(L-8,y+4,fmt(Math.round(max*i/4)),'tick',{'text-anchor':'end'}))}
+  vals.forEach((v,i)=>{
+    const h=ph*v/max,x=L+i*bw+bw*0.15,w=bw*0.7,y=T+ph-h;
+    const g=el('g',{class:'row'});
+    g.appendChild(el('rect',{x,y,width:w,height:h,class:'bar'+(opts.dim&&opts.dim(i)?' dim':''),rx:3}));
+    g.appendChild(el('rect',{x:L+i*bw,y:T,width:bw,height:ph,class:'hit'}));
+    hover(g,ttFn(i));s.appendChild(g);
+    s.appendChild(txt(x+w/2,y-6,fmt(v),'val',{'text-anchor':'middle','font-size':12}));
+    s.appendChild(txt(L+i*bw+bw/2,H-12,labels[i],'',{'text-anchor':'middle'}));
+  });
+  box.innerHTML='';box.appendChild(s);
+}
+function renderDays(){
+  const src=sel==='all'?DATA.pro_tag:Object.fromEntries(DAYS.map(d=>[d,DATA.tag_stele[d][sel]]));
+  const vals=DAYS.map(d=>src[d]);
+  vbars(document.getElementById('days'),DAYS.map(dayLabel),vals,i=>`<b>${dayLabel(DAYS[i])}</b>${fmt(vals[i])} Sessions`);
+}
+function renderDur(){
+  const d=cur();const tot=d.sessions||1;
+  vbars(document.getElementById('dur'),DATA.dauer_hist_labels,d.dauer_hist,i=>`<b>${DATA.dauer_hist_labels[i]}</b>${fmt(d.dauer_hist[i])} Sessions · ${pct(d.dauer_hist[i]/tot)}`);
+}
+
+/* ---------- Horizontal bars ---------- */
+function hbars(box,rows,opts={}){ // rows: {label, value, display, color, dim, tt, key}
+  const W=560,L=opts.labelW||170,R=70,rh=opts.rowH||26,T=6,H=T+rows.length*rh+6,pw=W-L-R;
+  const max=opts.max||Math.max(...rows.map(r=>r.value))||1;
+  const s=svg(W,H);
+  rows.forEach((r,i)=>{
+    const y=T+i*rh,bh=rh-8,w=pw*r.value/max;
+    const g=el('g',{class:'row'});
+    g.appendChild(el('rect',{x:0,y,width:W,height:rh,class:'hit'}));
+    g.appendChild(el('rect',{x:L,y:y+4,width:Math.max(w,0),height:bh,rx:3,fill:r.color||'var(--accent)',class:r.dim?'bar dim':'',style:r.color?'':''}));
+    g.appendChild(txt(L-10,y+rh/2+4,r.label,'',{'text-anchor':'end'}));
+    g.appendChild(txt(L+w+8,y+rh/2+4,r.display??fmt(r.value),'val'));
+    if(r.tt)hover(g,r.tt);
+    if(opts.onClick)g.addEventListener('click',()=>opts.onClick(r));
+    if(opts.onClick)g.style.cursor='pointer';
+    s.appendChild(g);
+  });
+  box.innerHTML='';box.appendChild(s);
+}
+function renderStelen(){
+  const rows=KEYS.map(k=>({key:k,label:DATA.stelen[k].id.replace('BS','')+'  '+DATA.stelen[k].modell,value:DATA.pro_stele[k].sessions,dim:sel!=='all'&&sel!==k,tt:`<b>${label(k)}</b>${fmt(DATA.pro_stele[k].sessions)} Sessions · Ø ${dur(DATA.pro_stele[k].dauer_mean_s)}`}))
+    .sort((a,b)=>b.value-a.value);
+  hbars(document.getElementById('stelen'),rows,{labelW:150,onClick:r=>{sel=sel===r.key?'all':r.key;render()}});
+}
+function renderSections(){
+  const d=cur();const tot=d.sessions||1;
+  const rows=Object.entries(d.sektionen).filter(([k,v])=>v.sessions>0).map(([k,v])=>({label:k,value:v.sessions/tot,display:pct(v.sessions/tot),color:SECT_COLORS[k],tt:`<b>${k}</b>${fmt(v.sessions)} von ${fmt(tot)} Sessions · ${fmt(v.taps)} Berührungen${k!=='Startseite'?' · Verweildauer gesamt '+dur(v.dauer_s):''}`}))
+    .sort((a,b)=>b.value-a.value);
+  hbars(document.getElementById('sections'),rows,{max:1,labelW:150});
+}
+function renderTaps(){
+  const d=cur();
+  const rows=Object.entries(d.sektionen).filter(([k,v])=>v.taps>0).map(([k,v])=>({label:k,value:v.taps,color:SECT_COLORS[k],tt:`<b>${k}</b>${fmt(v.taps)} Berührungen · ${pct(v.taps/d.taps)} aller Tipps`}))
+    .sort((a,b)=>b.value-a.value);
+  hbars(document.getElementById('taps'),rows,{labelW:150});
+}
+function renderVideos(){
+  const d=cur();const box=document.getElementById('videos');
+  const ent=Object.entries(d.videos_liste).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('vid-note').textContent=sel==='all'?'Video-Starts je Film über alle Stelen. Videos sind nur in den Highlights einiger Stelen eingebettet.':`Video-Starts auf ${label(sel)}.`;
+  if(!ent.length){box.innerHTML='<p class="note" style="padding:30px 0;text-align:center">Auf dieser Stele sind keine Videos eingebettet.</p>';return}
+  hbars(box,ent.map(([k,v])=>({label:k,value:v,tt:`<b>${k}</b>${fmt(v)} Starts · ${pct(v/d.videos)} aller Video-Starts`})),{labelW:200,rowH:24});
+}
+
+/* ---------- Table ---------- */
+function renderTable(){
+  const tb=document.querySelector('#tbl tbody');const max=Math.max(...KEYS.map(k=>DATA.pro_stele[k].sessions));
+  tb.innerHTML=KEYS.map(k=>{const s=DATA.stelen[k],d=DATA.pro_stele[k];
+    return `<tr data-k="${k}" class="${sel===k?'on':''}"><td>${s.id.replace('BS','Stele ')}</td><td>${s.modell}</td><td><span class="mini" style="width:${60*d.sessions/max}px"></span>${fmt(d.sessions)}</td><td>${dur(d.dauer_mean_s)}</td><td>${dur(d.dauer_median_s)}</td><td>${fmt(d.taps)}</td><td>${(d.taps/d.sessions).toLocaleString('de-DE',{maximumFractionDigits:1})}</td><td>${pct(d.anteil_engl)}</td><td>${d.videos?fmt(d.videos):'–'}</td></tr>`}).join('')
+   +`<tr style="font-weight:600;cursor:default"><td>Gesamt</td><td></td><td>${fmt(DATA.gesamt.sessions)}</td><td>${dur(DATA.gesamt.dauer_mean_s)}</td><td>${dur(DATA.gesamt.dauer_median_s)}</td><td>${fmt(DATA.gesamt.taps)}</td><td>${(DATA.gesamt.taps/DATA.gesamt.sessions).toLocaleString('de-DE',{maximumFractionDigits:1})}</td><td>${pct(DATA.gesamt.anteil_engl)}</td><td>${fmt(DATA.gesamt.videos)}</td></tr>`;
+  tb.querySelectorAll('tr[data-k]').forEach(tr=>tr.addEventListener('click',()=>{sel=sel===tr.dataset.k?'all':tr.dataset.k;render();}));
+}
+function renderRules(){
+  const r=DATA.regeln;
+  document.getElementById('rules').innerHTML=[
+    [fmt(r.rohdaten),'protokollierte Sessions insgesamt'],
+    ['− '+r.aufbau_13_09,'Sessions vom 13.09. (Aufbau und Tests)'],
+    ['− '+r.ohne_beruehrung,'Sessions ohne eine einzige Berührung (automatische Neustarts)'],
+    ['− '+r.ausserhalb_8_19,'Sessions außerhalb von 8 bis 20 Uhr'],
+    ['− '+r.laenger_30min,'Sessions mit mehr als 30 Minuten Interaktionsdauer (Stele blieb vermutlich offen)'],
+    ['= '+fmt(r.gueltig),'ausgewertete Sessions'],
+  ].map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('');
+}
+
+function render(){
+  fb.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.k===sel)));
+  renderKPIs();renderHeat();renderDays();renderStelen();renderSections();renderDur();renderTaps();renderVideos();renderTable();
+}
+function applyMeta(){
+  const M=DATA.meta||{};const L=M.logos||{};
+  document.getElementById('m-eyebrow').textContent=M.eyebrow||'';
+  const h=document.getElementById('m-title');h.textContent='';(M.title||'').split('\n').forEach((s,i)=>{if(i)h.appendChild(document.createElement('br'));h.appendChild(document.createTextNode(s))});
+  document.getElementById('m-footer').textContent=M.footer||'';
+  const set=(id,src)=>{const e=document.getElementById(id);if(e&&src)e.src=src;};
+  ['','2'].forEach(s=>{set('logo-man-d'+s,L.man&&L.man.dark);set('logo-man-l'+s,L.man&&L.man.light);set('logo-sh-d'+s,L.schmidhuber&&L.schmidhuber.dark);set('logo-sh-l'+s,L.schmidhuber&&L.schmidhuber.light)});
+}
+applyMeta();renderRules();render();
+}
+</script>
+</body>
+</html>
