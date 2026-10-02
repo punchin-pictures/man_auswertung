@@ -128,7 +128,7 @@ footer{margin-top:28px;font-size:12px;color:var(--muted);display:flex;justify-co
 </style>
 </head>
 <body>
-<div class="gate" id="gate"><form id="gateForm" autocomplete="off"><label for="code">Zugangscode</label><input id="code" name="code" type="password" autocapitalize="off" spellcheck="false" autofocus><button type="submit">Öffnen</button><div class="err" id="gateErr"></div><div class="ver">v1.4</div></form></div>
+<div class="gate" id="gate"><form id="gateForm" autocomplete="off"><label for="code">Zugangscode</label><input id="code" name="code" type="password" autocapitalize="off" spellcheck="false" autofocus><button type="submit">Öffnen</button><div class="err" id="gateErr"></div><div class="ver">v1.6</div></form></div>
 
 
 <div class="wrap" id="app" hidden>
@@ -246,7 +246,7 @@ document.getElementById('gateForm').addEventListener('submit',e=>{e.preventDefau
 try{const c=sessionStorage.getItem('bs-code');if(c)unlock(c)}catch{}
 
 function boot(){
-const SECT_COLORS={'Startseite':'var(--s1)','Individualisierungen & Ausstattungen':'var(--s2)','Technische Daten':'var(--s3)','Services & Solutions':'var(--s4)','Ind. & Ausstattungen (Variante)':'var(--s5)','MAN Individual':'var(--s6)'};
+const SECT_COLORS={'Startseite':'var(--s1)','Individualisierungen & Ausstattungen':'var(--s2)','Technische Daten':'var(--s3)','Services & Solutions':'var(--s4)','Highlights':'var(--s5)','MAN Individual':'var(--s6)'};
 const KEYS=Object.keys(DATA.stelen);
 const DAYS=Object.keys(DATA.pro_tag);
 const HOURS=Object.keys(DATA.pro_stunde).map(Number);
