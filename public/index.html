@@ -128,7 +128,7 @@ footer{margin-top:28px;font-size:12px;color:var(--muted);display:flex;justify-co
 </style>
 </head>
 <body>
-<div class="gate" id="gate"><form id="gateForm" autocomplete="off"><label for="code">Zugangscode</label><input id="code" name="code" type="password" autocapitalize="off" spellcheck="false" autofocus><button type="submit">Öffnen</button><div class="err" id="gateErr"></div><div class="ver">v1.2</div></form></div>
+<div class="gate" id="gate"><form id="gateForm" autocomplete="off"><label for="code">Zugangscode</label><input id="code" name="code" type="password" autocapitalize="off" spellcheck="false" autofocus><button type="submit">Öffnen</button><div class="err" id="gateErr"></div><div class="ver">v1.4</div></form></div>
 
 
 <div class="wrap" id="app" hidden>
@@ -154,7 +154,7 @@ footer{margin-top:28px;font-size:12px;color:var(--muted);display:flex;justify-co
 <div class="grid">
   <div class="card full">
     <div class="head"><h2>Besucheraufkommen nach Messetag und Uhrzeit</h2><span class="note" style="margin:0">Sessions pro Stunde</span></div>
-    <p class="note">Jede Zelle ist eine Stunde. Je dunkler, desto mehr Sessions wurden in dieser Stunde gestartet. Montag, 14.09., war der Tag vor der Eröffnung.</p>
+    <p class="note">Jede Zelle ist eine Stunde. Je kräftiger die Farbe, desto mehr Sessions wurden in dieser Stunde gestartet. Montag, 14.09., war der Tag vor der Eröffnung.</p>
     <div id="heat"></div>
   </div>
 
@@ -189,6 +189,12 @@ footer{margin-top:28px;font-size:12px;color:var(--muted);display:flex;justify-co
   </div>
 
   <div class="card">
+    <div class="head"><h2>Services &amp; Solutions im Detail</h2></div>
+    <p class="note" id="srv-note"></p>
+    <div id="services"></div>
+  </div>
+
+  <div class="card">
     <div class="head"><h2>Gestartete Videos</h2></div>
     <p class="note" id="vid-note">Video-Starts je Film über den gesamten Zeitraum.</p>
     <div id="videos"></div>
@@ -202,6 +208,12 @@ footer{margin-top:28px;font-size:12px;color:var(--muted);display:flex;justify-co
     </table></div>
   </div>
 </div>
+
+<div class="grid" style="margin-top:14px"><div class="card full">
+  <div class="head"><h2>Services &amp; Solutions je Stele</h2><span class="note" style="margin:0">Berührungen je Unterseite</span></div>
+  <p class="note">Ein Strich bedeutet: Diese Unterseite ist auf der Stele nicht vorhanden. Stele 12 hat keinen Bereich Services &amp; Solutions.</p>
+  <div class="tbl"><table id="srvtbl"><thead></thead><tbody></tbody></table></div>
+</div></div>
 
 <div class="method">
   <h3>Datengrundlage und Bereinigung</h3>
@@ -234,7 +246,7 @@ document.getElementById('gateForm').addEventListener('submit',e=>{e.preventDefau
 try{const c=sessionStorage.getItem('bs-code');if(c)unlock(c)}catch{}
 
 function boot(){
-const SECT_COLORS={'Startseite':'var(--s1)','Highlights':'var(--s2)','Technische Daten':'var(--s3)','Bundles':'var(--s4)','Highlights (Variante)':'var(--s5)','Individualisierung':'var(--s6)'};
+const SECT_COLORS={'Startseite':'var(--s1)','Individualisierungen & Ausstattungen':'var(--s2)','Technische Daten':'var(--s3)','Services & Solutions':'var(--s4)','Ind. & Ausstattungen (Variante)':'var(--s5)','MAN Individual':'var(--s6)'};
 const KEYS=Object.keys(DATA.stelen);
 const DAYS=Object.keys(DATA.pro_tag);
 const HOURS=Object.keys(DATA.pro_stunde).map(Number);
@@ -352,18 +364,28 @@ function renderSections(){
   const d=cur();const tot=d.sessions||1;
   const rows=Object.entries(d.sektionen).filter(([k,v])=>v.sessions>0).map(([k,v])=>({label:k,value:v.sessions/tot,display:pct(v.sessions/tot),color:SECT_COLORS[k],tt:`<b>${k}</b>${fmt(v.sessions)} von ${fmt(tot)} Sessions · ${fmt(v.taps)} Berührungen${k!=='Startseite'?' · Verweildauer gesamt '+dur(v.dauer_s):''}`}))
     .sort((a,b)=>b.value-a.value);
-  hbars(document.getElementById('sections'),rows,{max:1,labelW:150});
+  hbars(document.getElementById('sections'),rows,{max:1,labelW:230});
 }
 function renderTaps(){
   const d=cur();
   const rows=Object.entries(d.sektionen).filter(([k,v])=>v.taps>0).map(([k,v])=>({label:k,value:v.taps,color:SECT_COLORS[k],tt:`<b>${k}</b>${fmt(v.taps)} Berührungen · ${pct(v.taps/d.taps)} aller Tipps`}))
     .sort((a,b)=>b.value-a.value);
-  hbars(document.getElementById('taps'),rows,{labelW:150});
+  hbars(document.getElementById('taps'),rows,{labelW:230});
+}
+function renderServices(){
+  const d=cur();const box=document.getElementById('services');const note=document.getElementById('srv-note');
+  const covered=DATA.services_stelen.map(k=>DATA.stelen[k].id.replace('BS','')).join(', ');
+  if(!d.services){note.textContent='Auf dieser Stele gibt es keinen Bereich Services & Solutions.';box.innerHTML='';return}
+  const S=d.services;const ov=S['Übersicht']||{taps:0,sessions:0};
+  const vorh=sel==='all'?null:DATA.services_vorhanden[sel];
+  note.textContent=(sel==='all'?'Berührungen auf den Unterseiten von Services & Solutions über alle Stelen. ':`Auf dieser Stele vorhanden: ${vorh.join(', ')}. `)+`Die Übersichtsseite wurde ${fmt(ov.taps)}-mal berührt (${fmt(ov.sessions)} Sessions).`;
+  const rows=DATA.services_items.filter(k=>sel==='all'||vorh.includes(k)).map(k=>({label:k,value:S[k]?S[k].taps:0,tt:`<b>${k}</b>${fmt(S[k]?S[k].taps:0)} Berührungen · ${fmt(S[k]?S[k].sessions:0)} Sessions`})).sort((a,b)=>b.value-a.value);
+  hbars(box,rows,{labelW:200,rowH:26});
 }
 function renderVideos(){
   const d=cur();const box=document.getElementById('videos');
   const ent=Object.entries(d.videos_liste).sort((a,b)=>b[1]-a[1]);
-  document.getElementById('vid-note').textContent=sel==='all'?'Video-Starts je Film über alle Stelen. Videos sind nur in den Highlights einiger Stelen eingebettet.':`Video-Starts auf ${label(sel)}.`;
+  document.getElementById('vid-note').textContent=sel==='all'?'Video-Starts je Film über alle Stelen. Videos sind nur im Bereich Individualisierungen & Ausstattungen einiger Stelen eingebettet.':`Video-Starts auf ${label(sel)}.`;
   if(!ent.length){box.innerHTML='<p class="note" style="padding:30px 0;text-align:center">Auf dieser Stele sind keine Videos eingebettet.</p>';return}
   hbars(box,ent.map(([k,v])=>({label:k,value:v,tt:`<b>${k}</b>${fmt(v)} Starts · ${pct(v/d.videos)} aller Video-Starts`})),{labelW:200,rowH:24});
 }
@@ -374,6 +396,15 @@ function renderTable(){
   tb.innerHTML=KEYS.map(k=>{const s=DATA.stelen[k],d=DATA.pro_stele[k];
     return `<tr data-k="${k}" class="${sel===k?'on':''}"><td>${s.id.replace('BS','Stele ')}</td><td>${s.modell}</td><td><span class="mini" style="width:${60*d.sessions/max}px"></span>${fmt(d.sessions)}</td><td>${dur(d.dauer_mean_s)}</td><td>${dur(d.dauer_median_s)}</td><td>${fmt(d.taps)}</td><td>${(d.taps/d.sessions).toLocaleString('de-DE',{maximumFractionDigits:1})}</td><td>${pct(d.anteil_engl)}</td><td>${d.videos?fmt(d.videos):'–'}</td></tr>`}).join('')
    +`<tr style="font-weight:600;cursor:default"><td>Gesamt</td><td></td><td>${fmt(DATA.gesamt.sessions)}</td><td>${dur(DATA.gesamt.dauer_mean_s)}</td><td>${dur(DATA.gesamt.dauer_median_s)}</td><td>${fmt(DATA.gesamt.taps)}</td><td>${(DATA.gesamt.taps/DATA.gesamt.sessions).toLocaleString('de-DE',{maximumFractionDigits:1})}</td><td>${pct(DATA.gesamt.anteil_engl)}</td><td>${fmt(DATA.gesamt.videos)}</td></tr>`;
+  tb.querySelectorAll('tr[data-k]').forEach(tr=>tr.addEventListener('click',()=>{sel=sel===tr.dataset.k?'all':tr.dataset.k;render();}));
+}
+function renderServicesTable(){
+  const tb=document.querySelector('#srvtbl tbody'),th=document.querySelector('#srvtbl thead');
+  th.innerHTML='<tr><th>Stele</th><th>Fahrzeug</th>'+DATA.services_items.map(i=>`<th>${i.replace(' Beratung','')}</th>`).join('')+'<th>Übersicht</th></tr>';
+  tb.innerHTML=KEYS.map(k=>{const s=DATA.stelen[k],d=DATA.pro_stele[k],v=DATA.services_vorhanden[k];
+    const cells=DATA.services_items.map(i=>!d.services||!v.includes(i)?'<td style="color:var(--muted)">–</td>':`<td>${fmt(d.services[i].taps)}</td>`).join('');
+    return `<tr data-k="${k}" class="${sel===k?'on':''}"><td>${s.id.replace('BS','Stele ')}</td><td>${s.modell}</td>${cells}<td>${d.services?fmt(d.services['Übersicht'].taps):'<span style="color:var(--muted)">–</span>'}</td></tr>`}).join('')
+   +'<tr style="font-weight:600;cursor:default"><td>Gesamt</td><td></td>'+DATA.services_items.map(i=>`<td>${fmt(DATA.gesamt.services[i].taps)}</td>`).join('')+`<td>${fmt(DATA.gesamt.services['Übersicht'].taps)}</td></tr>`;
   tb.querySelectorAll('tr[data-k]').forEach(tr=>tr.addEventListener('click',()=>{sel=sel===tr.dataset.k?'all':tr.dataset.k;render();}));
 }
 function renderRules(){
@@ -390,7 +421,7 @@ function renderRules(){
 
 function render(){
   fb.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.k===sel)));
-  renderKPIs();renderHeat();renderDays();renderStelen();renderSections();renderDur();renderTaps();renderVideos();renderTable();
+  renderKPIs();renderHeat();renderDays();renderStelen();renderSections();renderDur();renderTaps();renderServices();renderVideos();renderTable();renderServicesTable();
 }
 function applyMeta(){
   const M=DATA.meta||{};const L=M.logos||{};
